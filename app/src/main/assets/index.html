@@ -25,7 +25,7 @@
 html,body{height:100%;margin:0}
 html{--sat:env(safe-area-inset-top,0px);background-color:var(--bg);background-repeat:no-repeat;background-image:linear-gradient(var(--hd),var(--hd)),linear-gradient(var(--sur),var(--sur));background-position:top,bottom;background-size:100% var(--sat),100% env(safe-area-inset-bottom,0px)}
 /* iPhone/iPad (app instalada): iOS dibuja un velo difuminado detrás de la barra de estado que baja unos puntos más allá de la zona segura; este margen extra deja el encabezado fuera de ese velo. */
-html.ios-sa{--sat:env(safe-area-inset-top,0px)}
+html.ios-sa{--sat:calc(env(safe-area-inset-top,0px) + 18px)}
 *,*::before,*::after{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:Roboto,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
 body,#app,header,nav,.card,.bub,.menu,.info,.dlg,.sheet,input,textarea,select{transition:background-color .35s,color .35s,border-color .35s}
