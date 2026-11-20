@@ -1,0 +1,114 @@
+name: Compilar APK y PWA
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      publicar:
+        description: 'Publicar una actualización (Release) para la app de Android'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------- Android ----------
+  apk:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.v }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calcular la versión (VERSION + n.º de commits)
+        id: ver
+        run: echo "v=$(tr -d '[:space:]' < VERSION).$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Descargar pdf.js (visor de la planilla)
+        continue-on-error: true
+        run: bash scripts/get-pdfjs.sh app/src/main/assets/pdfjs
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Compilar APK
+        run: gradle assembleDebug --no-daemon -PappVersion=${{ steps.ver.outputs.v }} -PupdateRepo=${{ github.repository }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Asignaciones-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+  # ---------- Release automática (solo APK de Android) ----------
+  release:
+    needs: apk
+    # Solo se publica cuando lo pedís a mano: Actions → Run workflow → marcar "Publicar".
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publicar }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Asignaciones-APK
+          path: dist
+
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VN: ${{ needs.apk.outputs.version }}
+        run: |
+          TAG="v$VN"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "La versión $VN ya tiene release; no hay nada nuevo que publicar."
+            exit 0
+          fi
+          cp dist/app-debug.apk "Asignaciones-v$VN.apk"
+          gh release create "$TAG" "Asignaciones-v$VN.apk" --repo "$GITHUB_REPOSITORY" \
+            --title "Asignaciones $VN" \
+            --notes "Asignaciones $VN" \
+            --target "$GITHUB_SHA" --latest
+
+  # ---------- iPhone / iPad (PWA) ----------
+  pwa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Armar la versión web
+        run: bash scripts/build-pwa.sh
+
+      # Copia descargable de la versión web (por si querés alojarla en otro lado)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Asignaciones-iOS-PWA
+          path: _site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: pwa
+    runs-on: ubuntu-latest
+    # Si GitHub Pages no está activado en el repositorio, este paso falla sin afectar al APK.
+    continue-on-error: true
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
