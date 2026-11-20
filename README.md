@@ -39,3 +39,9 @@ Si no querés usar Pages, el artefacto **Asignaciones-iOS-PWA** trae la carpeta 
 - La primera vez que descargue, Android pedirá permitir **instalar apps desconocidas** para Asignaciones.
 - Mantené el mismo `app/asignaciones.keystore` siempre; si cambia, Android rechaza la actualización.
 - Las versiones anteriores a la 2.0 no traen el actualizador: la primera con actualizador hay que instalarla a mano una vez.
+
+## Cambios de esta revisión
+- **iPhone (PWA):** se corrige el espacio vacío de abajo (el alto real de pantalla se mide y se fuerza en `fitViewport()`), y el encabezado baja unos puntos para quedar fuera del velo difuminado que iOS dibuja detrás de la barra de estado (`html.ios-sa`, variable `--sat`, 18 px extra).
+- **WhatsApp en iOS:** usa `whatsapp://send?text=…` en lugar de `wa.me`, que abría el navegador interno de la PWA y dejaba una pantalla en blanco al volver. Si no funciona, poné `HIDE_WA_IOS = true` en `index.html` y el botón se oculta solo en iOS (queda *Compartir*).
+- **Pantallas anchas (≥ 900×520 px):** barra lateral, contenido centrado y puestos en columnas. En el celular no cambia nada (aunque se gire, no llega a ese tamaño). En escritorio el PDF siempre se abre a pantalla completa. Bloque CSS `v7` al final de la hoja de estilos.
+- **Diagnóstico oculto:** tocá 5 veces seguidas el texto «Versión» (Configuración) para ver medidas de pantalla.

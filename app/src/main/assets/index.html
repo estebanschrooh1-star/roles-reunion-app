@@ -23,12 +23,14 @@
 --bub:hsl(var(--h) 52% 22%);--bubi:hsl(var(--h) 90% 93%);--sel:hsl(var(--h) 40% 17%);--warn:#F87171;
 --gray:#BDBDBD;--wab:hsl(var(--h) 24% 11%);--wat:#25D366;--wabd:hsl(var(--h) 22% 21%);color-scheme:dark}
 html,body{height:100%;margin:0}
-html{background-color:var(--bg);background-repeat:no-repeat;background-image:linear-gradient(var(--hd),var(--hd)),linear-gradient(var(--sur),var(--sur));background-position:top,bottom;background-size:100% env(safe-area-inset-top,0px),100% env(safe-area-inset-bottom,0px)}
+html{--sat:env(safe-area-inset-top,0px);background-color:var(--bg);background-repeat:no-repeat;background-image:linear-gradient(var(--hd),var(--hd)),linear-gradient(var(--sur),var(--sur));background-position:top,bottom;background-size:100% var(--sat),100% env(safe-area-inset-bottom,0px)}
+/* iPhone/iPad (app instalada): iOS dibuja un velo difuminado detrás de la barra de estado que baja unos puntos más allá de la zona segura; este margen extra deja el encabezado fuera de ese velo. */
+html.ios-sa{--sat:calc(env(safe-area-inset-top,0px) + 18px)}
 *,*::before,*::after{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:Roboto,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
 body,#app,header,nav,.card,.bub,.menu,.info,.dlg,.sheet,input,textarea,select{transition:background-color .35s,color .35s,border-color .35s}
 #app{position:fixed;top:0;bottom:0;left:0;right:0;display:flex;flex-direction:column;max-width:520px;margin:0 auto;background:var(--sur);overflow:hidden;padding:0 0 env(safe-area-inset-bottom,0px)}
-#app::before{content:"";flex:none;height:env(safe-area-inset-top,0px);background:var(--hd);transition:background-color .35s}
+#app::before{content:"";flex:none;height:var(--sat);background:var(--hd);transition:background-color .35s}
 header{background:var(--hd);color:var(--hdi);display:flex;align-items:center;gap:2px;padding:4px 6px 4px 16px;min-height:56px}
 header h1{flex:1;font-size:20px;margin:0;font-weight:700}
 header button{background:none;border:0;border-radius:50%;color:var(--hdi);width:44px;height:44px;min-height:0;padding:0;display:grid;place-items:center;transition:background-color .25s,transform .14s}
@@ -407,7 +409,9 @@ html.sp0 #app::before{height:0}
 html.spc #app::before{transition-duration:.46s;transition-timing-function:cubic-bezier(.4,0,.2,1)}
 html.spx #app::before,html.dr #app::before{transition:none}
 /* ===== v6: edición en el menú, títulos con ícono, iOS, PDF suave ===== */
-html,body{position:fixed;inset:0;width:100%;overflow:hidden;overscroll-behavior:none}
+html,body{position:fixed;inset:0;width:100%;height:var(--appH,auto);overflow:hidden;overscroll-behavior:none}
+/* iOS (app instalada): si el sistema entrega un alto menor al de la pantalla (queda una franja vacía abajo), JS fija --appH al alto real y body pasa a ser la referencia de todo lo "fixed". */
+html.gap body{contain:layout}
 main{overscroll-behavior-y:contain}
 header h1{display:flex;align-items:center;gap:10px}
 header h1 svg{width:24px;height:24px;flex:none;color:var(--acc)}
@@ -431,6 +435,57 @@ textarea.clt:focus{background:var(--bg)!important;box-shadow:0 0 0 2px var(--acc
 .pg{animation:pvxin .25s ease-out both}
 .pg canvas.fi{animation:pvxin .3s ease-out both}
 .pvb{animation:pvxin .3s .05s ease-out both}
+
+/* ===== v7: pantallas anchas (PC / tablet horizontal) =====
+   Solo aplica con ventanas de al menos 900x520 px: un teléfono, incluso girado, no llega, así que el celular queda igual. */
+@media (min-width:900px) and (min-height:520px){
+  html,body{background:var(--bg)}
+  html{--sat:0px!important}
+  #app{max-width:1200px;box-shadow:0 0 0 1px var(--line),0 40px 90px -50px rgba(0,0,0,.45)}
+  #app::before{display:none}
+  /* pantallas con menú: barra lateral a la izquierda, encabezado y contenido a la derecha */
+  #app:has(>nav){display:grid;grid-template-columns:232px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);padding:0}
+  #app:has(>nav)>header{grid-column:2;grid-row:1;padding-left:28px;padding-right:16px}
+  #app:has(>nav)>main{grid-column:2;grid-row:2}
+  #app:has(>nav)>nav{grid-column:1;grid-row:1/span 2;position:relative;left:auto;right:auto;bottom:auto;padding:22px 14px;background:var(--bg);pointer-events:auto;display:flex;flex-direction:column}
+  .np{display:flex;flex-direction:column;gap:2px;padding:0;background:none;box-shadow:none;border-radius:0}
+  :root[data-theme="dark"] .np{background:none;box-shadow:none}
+  .np .ind{top:0;bottom:auto;left:0;width:100%;height:52px;transform:translateY(calc(var(--i) * (52px + 2px)));border-radius:16px;box-shadow:0 8px 16px -10px var(--acc)}
+  .np button{display:flex;align-items:center;justify-content:flex-start;gap:14px;height:52px;padding:0 16px;border-radius:16px;font-size:15px;font-weight:600;text-align:left}
+  .np button svg{flex:none;width:24px;height:24px}
+  .np button::after{content:attr(aria-label)}
+  .np button:not(.on):hover{background:var(--sel);color:var(--ink)}
+  /* contenido centrado y con ancho cómodo */
+  main{--mw:780px;padding-left:max(28px,calc((100% - var(--mw)) / 2));padding-right:max(28px,calc((100% - var(--mw)) / 2));padding-top:10px}
+  main:has(.bub.msg){--mw:1040px}
+  main:not(.cfgm){padding-bottom:40px}
+  /* Mensaje: los puestos se reparten en columnas */
+  .bub.msg{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));align-items:start;gap:16px}
+  .bub.msg>.mh,.bub.msg>.cl2{grid-column:1/-1}
+  .bub.msg~.warn,.bub.msg~.cnt,.bub.msg~.stack{max-width:520px;margin-left:auto;margin-right:auto}
+  .bub.msg~.stack{width:100%}
+  main>.warn,main>.cnt{text-align:center}
+  /* detalles de escritorio */
+  .toast{bottom:28px!important}
+  .ov.bt{align-items:center;padding:24px}
+  .sheet{max-width:480px;max-height:80%;border-radius:28px;padding:22px 20px;animation:pop .26s cubic-bezier(.2,.9,.3,1.15)}
+  .ov.out .sheet{animation:popout .17s forwards}
+  .sheet::before{display:none}
+  .dlg{max-width:380px}
+  /* visor PDF: ocupa el área de la app y las páginas no se estiran sin límite */
+  .pv,.sph{max-width:1200px}
+  .pvw{max-width:920px;margin:0 auto}
+  .lk,.wel{max-width:520px;margin:0 auto}
+  main::-webkit-scrollbar{width:12px}
+  main::-webkit-scrollbar-thumb{background:var(--line);border-radius:12px;border:3px solid var(--sur)}
+}
+@media (min-width:900px) and (min-height:520px) and (hover:hover){
+  button:not(:disabled):not(.pri):not(.sw):not(.wa):hover{filter:brightness(.97)}
+  :root[data-theme="dark"] button:not(:disabled):not(.pri):not(.sw):not(.wa):hover{filter:brightness(1.12)}
+  .pri:hover,.wa:hover{filter:brightness(1.06)}
+  .ph:hover{background:var(--sel)}
+  .hdl{cursor:grab}
+}
 </style>
 </head>
 <body>
@@ -442,6 +497,26 @@ const $ = s => document.querySelector(s);
 const A = window.Android;
 /* WEB = versión PWA (iPhone/iPad u otro navegador): sin recordatorios, sin copia en Drive y sin PDF compartido desde otras apps. */
 const WEB = !A;
+/* ---------- plataforma y alto real de pantalla ---------- */
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const STANDALONE = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+const DESK_Q = window.matchMedia ? matchMedia('(min-width: 900px) and (min-height: 520px)') : null;
+const DESK = () => !!(DESK_Q && DESK_Q.matches);   /* misma condición que el bloque "v7" del CSS */
+/* WhatsApp en iOS: se abre con el esquema whatsapp:// (wa.me abría el navegador interno de la PWA y al volver quedaba una pantalla en blanco).
+   Si en tu iPhone no funcionara, poné HIDE_WA_IOS = true para quitar el botón solo en iOS. */
+const HIDE_WA_IOS = false;
+function fitViewport() {
+  const root = document.documentElement;
+  root.classList.toggle('ios-sa', IOS && STANDALONE && !DESK());
+  if (!IOS || !STANDALONE) return;
+  const land = window.innerWidth > window.innerHeight;
+  const full = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+  const gap = full - window.innerHeight;
+  if (gap > 2 && gap < 140) { root.style.setProperty('--appH', full + 'px'); root.classList.add('gap'); }
+  else { root.style.removeProperty('--appH'); root.classList.remove('gap'); }
+}
+['resize', 'orientationchange', 'pageshow'].forEach(ev => window.addEventListener(ev, fitViewport));
+fitViewport(); [120, 500, 1500].forEach(t => setTimeout(fitViewport, t));
 const clone = o => JSON.parse(JSON.stringify(o));
 const K = 'asignaciones_app_v1';
 const WDID = ['lun','mar','mie','jue','vie','sab','dom'], WDFN = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
@@ -822,7 +897,7 @@ function vMsg() {
     + `<label class="cl2"><span class="clg" data-v="${esc(S.cls)}">\u200b</span><textarea class="clt" data-a="cls" rows="1" placeholder="Agregar conclusión" aria-label="Conclusión">${esc(S.cls)}</textarea><span class="ed">${ICON_EDIT}</span></label></div>`;
   if (draft.some(s => !s.p)) h += '<p class="warn">Hay puestos sin asignar.' + (bz.size ? ' Algunas personas no se usaron porque ya tienen asignación en la planilla.' : '') + '</p>';
   if (sent) h += '<p class="cnt okn">\u2713 Registrado en el historial. Tocá Regenerar para armar otro.</p>';
-  h += `<div class="stack"><button class="wa" data-a="wa">${ICON_WA}<span>Enviar por WhatsApp</span></button><div class="row" style="margin:0"><button class="ib" data-a="gen">${ICON_RETRY}<span>Regenerar</span></button><button class="ib" data-a="copy">${ICON_COPY}<span>Copiar</span></button></div><button data-a="share">Compartir</button></div>`;
+  h += `<div class="stack">${(IOS && HIDE_WA_IOS) ? '' : `<button class="wa" data-a="wa">${ICON_WA}<span>Enviar por WhatsApp</span></button>`}<div class="row" style="margin:0"><button class="ib" data-a="gen">${ICON_RETRY}<span>Regenerar</span></button><button class="ib" data-a="copy">${ICON_COPY}<span>Copiar</span></button></div><button data-a="share">Compartir</button></div>`;
   return h;
 }
 function vPpl() {
@@ -871,7 +946,7 @@ ${updCard()}<div class="card">${sw(L.on, 'lock', 'Bloqueo con patrón', ICON_LOC
 ${WEB ? '' : `<div class="card"><div class="line"><span class="drv">${ICON_DRIVE}<span>Copia de seguridad automática</span></span><button class="sw ${S.cloud.on ? 'on' : ''}" role="switch" aria-checked="${S.cloud.on}" aria-label="Copia de seguridad automática" data-a="cloud"><i></i></button></div><div class="exp ${S.cloud.on ? 'open' : ''}"><div class="inner"><div class="cloudbox"><div class="line"><span>Hacer una copia...</span><select class="cfr" data-a="cfreq" aria-label="Frecuencia">${[['day', 'Diaria'], ['week', 'Semanal'], ['month', 'Mensual']].map(o => `<option value="${o[0]}" ${S.cloud.freq === o[0] ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div><p class="leg">${esc(cloudStat())}</p><button data-a="cnow" style="width:100%;margin-top:10px">Copiar ahora</button></div></div></div></div>`}
 <div class="card"><h2>${ICON_BACKUP}Copia de seguridad</h2><div class="row" style="margin-bottom:0"><button class="ib" data-a="exp" aria-label="Exportar">${ICON_UP}<span>Exportar</span></button><button class="ib" data-a="imp" aria-label="Importar">${ICON_DOWN}<span>Importar</span></button></div><input type="file" id="bf" data-a="bf" accept=".txt,text/plain" hidden></div>
 <div class="card"><h2>${ICON_REFRESH}Restablecimiento</h2><div class="stack"><button class="dng" data-a="rsp">Restablecer personas</button><button class="dng" data-a="rsh">Restablecer historial</button><button class="dng" data-a="rsa">Restablecer app</button></div></div>
-<div class="cred"><div>Creado usando Claude AI <img src="${CLOGO}" alt=""></div><div>Idea original - Miqueas</div><div>Desarrollo - Esteban</div><div class="ver">Versión ${esc(VER)}</div></div>`;
+<div class="cred"><div>Creado usando Claude AI <img src="${CLOGO}" alt=""></div><div>Idea original - Miqueas</div><div>Desarrollo - Esteban</div><div class="ver" data-a="dbg">Versión ${esc(VER)}</div></div>`;
 }
 function overlay() {
   const o = closing ? ' out' : '', NR = ' Esta acción no se puede deshacer, a menos que tenga un respaldo.';
@@ -1170,7 +1245,7 @@ async function openPdf() {
   if (!pdfInfo.has) { toast('No hay ninguna planilla PDF. Subila desde Configuración.'); return; }
   const pv = $('#pv');
   if (pvFinF) { clearTimeout(pvFinT); pvFinF(); }
-  const root = document.documentElement, split = S.split === true;
+  const root = document.documentElement, split = S.split === true && !DESK();
   pdfOpen = true; pvZoom = 1; pvPages = []; pvMode = split ? 'split' : 'full';
   pv.className = 'pv' + (split ? '' : ' full'); pv.hidden = false;
   pv.innerHTML = `<button class="pvx" data-a="pvclose" aria-label="Cerrar">${ICON_X}</button><div class="pvb" id="pvb"><div class="pvw" id="pvw"><div class="pg sk" style="padding-bottom:141%"></div></div></div><div class="pvbar"><i class="pvl"></i><span class="pvtab" aria-label="Cerrar visor">${ICON_UP2}</span></div>`;
@@ -1747,8 +1822,8 @@ function doLogin() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'un') doLogin(); });
 document.addEventListener('input', e => { if (e.target.id === 'nn') nnv = e.target.value; });
-let npSynth = false, npUntil = 0, npSt = null;
-document.addEventListener('pointerdown', e => { const np = e.target.closest && e.target.closest('.np'); if (np) npSt = {np, x:e.clientX, m:false, i:-1}; });
+let npSynth = false, npUntil = 0, npSt = null, dbgN = 0, dbgT = 0;
+document.addEventListener('pointerdown', e => { const np = e.target.closest && e.target.closest('.np'); if (np && !DESK()) npSt = {np, x:e.clientX, m:false, i:-1}; });
 document.addEventListener('pointermove', e => {
   if (!npSt) return;
   if (!npSt.m && Math.abs(e.clientX - npSt.x) > 10) npSt.m = true;
@@ -1775,6 +1850,12 @@ document.addEventListener('click', e => {
   if (a === 'noop' || /^(INPUT|TEXTAREA|SELECT)$/.test(b.tagName) || closing) return;
   if (a === 'login') { doLogin(); return; }
   else if (a === 'tab') { if (tab !== v) resetScroll = true; tab = v; info = false; open = null; menu = null; }
+  else if (a === 'dbg') {
+    dbgN = (dbgN || 0) + 1; clearTimeout(dbgT); dbgT = setTimeout(() => { dbgN = 0; }, 1500);
+    if (dbgN >= 5) { dbgN = 0; const cs = getComputedStyle(document.documentElement), el = document.createElement('div'); el.style.cssText = 'position:fixed;top:env(safe-area-inset-top);left:0;height:env(safe-area-inset-bottom)'; document.body.appendChild(el); const sb = el.offsetHeight; el.remove();
+      alert(['inner ' + innerWidth + 'x' + innerHeight, 'screen ' + screen.width + 'x' + screen.height, 'visual ' + Math.round((visualViewport || {}).height || 0), 'safe-bottom ' + sb, 'standalone ' + STANDALONE, 'ios ' + IOS, 'html ' + document.documentElement.className, 'appH ' + cs.getPropertyValue('--appH')].join('\n')); }
+    return;
+  }
   else if (a === 'info') info = !info;
   else if (a === 'cfg') { cfg = !cfg; info = false; resetScroll = true; }
   else if (a === 'back') { cfg = false; info = false; resetScroll = true; }
@@ -1816,7 +1897,10 @@ document.addEventListener('click', e => {
     return;
   }
   else if (a === 'wa') {
-    if (A) A.whatsapp(txt()); else window.open('https://wa.me/?text=' + encodeURIComponent(txt()), '_blank', 'noopener');
+    const wt = txt();
+    if (A) A.whatsapp(wt);
+    else if (IOS) location.href = 'whatsapp://send?text=' + encodeURIComponent(wt);
+    else window.open('https://wa.me/?text=' + encodeURIComponent(wt), '_blank', 'noopener');
     afterSend('');
   }
   else if (a === 'share') {
